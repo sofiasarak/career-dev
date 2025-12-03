@@ -1,0 +1,65 @@
+---
+title: "Job Market Data Analysis"
+author: "Sofia Sarak"
+format: html
+editor: visual
+---
+
+Load in data
+
+```{r}
+#| warning: false
+#| message: false
+library(tidyverse)
+library(here)
+library(janitor)
+library(ggplot2)
+```
+
+```{r}
+#| message: false
+job_posts <- read_csv(here("data/job_posts_fall.csv")) %>% 
+  clean_names()
+```
+
+Data Wrangling
+
+```{r}
+job_posts <- job_posts %>% 
+  mutate(salary_min_monthly = ifelse(monthly == "Yes", compensation_minimum*12, compensation_minimum),
+         salary_min_all = ifelse(hourly == "Yes", compensation_minimum*40*50, salary_min_monthly),
+         salary_max_monthly = ifelse(monthly == "Yes", compensation_maximum*12, compensation_maximum),
+         salary_max_all = ifelse(hourly == "Yes", compensation_maximum*40*50, salary_max_monthly),
+         median_salary = (salary_min_all + salary_min_all)/2) %>% 
+  filter(median_salary < 176000000.00)
+```
+
+
+
+Preliminary Visualizations
+
+```{r}
+ggplot(data = job_posts, aes(x = experience_years)) + 
+  geom_bar() +
+  labs(title = "Years of Experience")
+```
+
+```{r}
+ggplot(data = job_posts, aes(x = state)) + 
+  geom_bar() +
+  labs(title = "Job Locations, by state")
+```
+
+```{r}
+ggplot(data = job_posts, aes(x = minimum_degree)) + 
+  geom_bar() +
+  labs(title = "Minimum Degree")
+```
+
+```{r}
+ggplot(data = job_posts, aes(x = median_salary)) + 
+  geom_boxplot() +
+  labs(title = "Median Annual Salary", 
+       x = "US Dollars")
+```
+
