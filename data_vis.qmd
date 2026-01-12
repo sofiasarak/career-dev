@@ -20,12 +20,15 @@ library(ggplot2)
 #| message: false
 job_posts <- read_csv(here("data/job_posts_fall.csv")) %>% 
   clean_names()
+
+job_posts_2 <- read_csv(here("data/posts_12-9.csv")) %>% 
+  clean_names()
 ```
 
 Data Wrangling
 
 ```{r}
-job_posts <- job_posts %>% 
+job_post_2 <- job_posts_2 %>% 
   mutate(salary_min_monthly = ifelse(monthly == "Yes", compensation_minimum*12, compensation_minimum),
          salary_min_all = ifelse(hourly == "Yes", compensation_minimum*40*50, salary_min_monthly),
          salary_max_monthly = ifelse(monthly == "Yes", compensation_maximum*12, compensation_maximum),
@@ -34,32 +37,38 @@ job_posts <- job_posts %>%
   filter(median_salary < 176000000.00)
 ```
 
-
-
 Preliminary Visualizations
 
 ```{r}
-ggplot(data = job_posts, aes(x = experience_years)) + 
+ggplot(data = job_posts_2, aes(x = experience_years)) + 
   geom_bar() +
   labs(title = "Years of Experience")
 ```
 
 ```{r}
-ggplot(data = job_posts, aes(x = state)) + 
+ggplot(data = job_posts_2, aes(x = state)) + 
   geom_bar() +
   labs(title = "Job Locations, by state")
 ```
 
 ```{r}
-ggplot(data = job_posts, aes(x = minimum_degree)) + 
+ggplot(data = job_posts_2, aes(x = minimum_degree)) + 
   geom_bar() +
   labs(title = "Minimum Degree")
 ```
 
 ```{r}
-ggplot(data = job_posts, aes(x = median_salary)) + 
+ggplot(data = job_post_2, aes(x = median_salary)) + 
   geom_boxplot() +
   labs(title = "Median Annual Salary", 
        x = "US Dollars")
+```
+
+
+By Sector
+
+```{r}
+ggplot(data = job_posts_2, aes(x = sector)) +
+  geom_bar()
 ```
 
