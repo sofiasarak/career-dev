@@ -6,7 +6,7 @@ format: html
 editor: visual
 ---
 
-The following report contains statistics and visualizations summarizing the job openings being posted to online services such as [Indeed](https://www.indeed.com/jobs?q=environmental+data+science&l=&from=searchOnHP&vjk=b9ae5b9d8d4a16b4), [Conservation Job Board](https://www.conservationjobboard.com/), [CalCareers](https://calcareers.ca.gov/CalHRPublic/Search/JobSearchResults.aspx#kw=environmental%20data), and others. Keywords such "environmental data science", "environmental analyst", and "climate analyst" (just to name a few, though a wide range were used) were searched for, and roles pertaining to environmental data analysis, planning, or communication were pulled and re-posted on the [BrenConnect website](https://brenconnect.bren.ucsb.edu/s/group/0F9Kg0000004CHNKA2/meds-2026-jobinternship-opportunities). These posts are what make up the data used in the following report.
+The following report contains statistics and visualizations summarizing the job openings being posted to online services such as [Indeed](https://www.indeed.com/jobs?q=environmental+data+science&l=&from=searchOnHP&vjk=b9ae5b9d8d4a16b4), [Conservation Job Board](https://www.conservationjobboard.com/), [CalCareers](https://calcareers.ca.gov/CalHRPublic/Search/JobSearchResults.aspx#kw=environmental%20data), and others. Keywords such "environmental data science", "environmental analyst", and "climate analyst" (just to name a few, though a wide range were used) were searched for, and roles pertaining to environmental data analysis, planning, or communication were pulled and re-posted on the [BrenConnect website](https://brenconnect.bren.ucsb.edu/s/group/0F9Kg0000004CHNKA2/meds-2026-jobinternship-opportunities). These posts are what make up the data used in the following report, and examples of positions are included throughout.
 
 ### MEDS 2026 Cohort
 
@@ -15,6 +15,8 @@ The Master of Environmental Data Science (MEDS) program at the Bren School teach
 Although most, if not all, positions that exemplified the skills taught in the MEDS program were posted, the job search was somewhat customized to the preferences of the current cohort. This was likely most influential when considering the location of the position, as the current class is particularly interested in California, the West Coast of the United States, Texas, and large cities such as New York City and Washington, D.C, with some international interest as well. Some students are also partial to remote positions.
 
 These factors guide the job openings posted on BrenConnect, and therefore the results presented in this report. In total, there are 104 positions included in the dataset, collected between October 2025 and January 2026.
+
+### Sample Position Descriptions
 
 ## Employer Information
 
@@ -29,11 +31,15 @@ library(janitor)
 library(ggplot2)
 library(patchwork)
 library(maps)
+library(geomtextpath)
 ```
 
 ```{r}
 #| echo: false
 #| message: false
+
+
+
 # Load fall quarter data
 fall <- read_csv(here("data/fall_posts.csv")) %>% 
   clean_names() %>%
@@ -75,7 +81,11 @@ fall <- read_csv(here("data/fall_posts.csv")) %>%
     
     # Default (keeps state abbreviation if unmatched)
     TRUE ~ state
-  ))
+  )) %>% 
+  mutate(position_type = str_replace(position_type, "reseacher", "researcher"),
+         position_type = str_replace(position_type, "specialist", "data specialist"),
+         position_type = str_replace(position_type, "data data specialist", "data specialist"),
+         position_type = str_replace(position_type, "machine learning data specialist", "machine learning specialist")) 
 
 
 # Create theme for all visualizations
@@ -83,6 +93,9 @@ report_theme <- theme_classic() +
   theme(axis.title.y = element_blank())
 
 bren_blue <- "#003660"
+bren_green <- "#78a441"
+
+specialist <- fall$position_type[str_detect(unique(fall$position_type), "specialist")]
 ```
 
 ### Sector and Environmental Field
@@ -124,7 +137,41 @@ ggplot(aes(x = reorder(sector, count), y = count)) +
   coord_flip()
 ```
 
+::: {.callout-note collapse="true" icon="false"}
+## Position in Consulting: Remote Sensing Scientist \@ Land IQ
 
+**Location:** Sacramento, CA
+
+**Description:** Land IQ is a multidisciplinary environmental consulting firm with services in agriculture, nutrients and salinity, and remote sensing, among others. They are hiring a remote sensing scientist to work on their growing geospatial team in a range of agronomic, environmental, and other land-based science disciplines. They are looking for applicants who have strong analytical, remote sensing and GIS skills and an exceptionally strong understanding of machine learning algorithms.
+
+**Desired Qualifications:**
+
+-   Education: MS Remote Sensing/Geography/Data Science field
+
+-   Experience: 0-5 years of experience in at least one of the following areas:
+
+    -   Remote sensing-based land cover mapping over agricultural areas and crop classification;
+
+    -   Image based time series analysis and crop phenology modeling;
+
+    -   Remote sensing of crop evapotranspiration; and/or
+
+    -   Image based crop yield modeling.
+
+-   Required Technical Capabilities:
+
+    -   Proficient at remote sensing modeling (e.g., data cleaning, feature selection, analysis, designing, building, and model assessment).
+
+    -   Familiar with deep learning platforms (e.g., Keras, Tensorflow) and related classification and segmentation algorithms.
+
+    -   Strong programming skills with Python.
+
+    -   Experienced in Python packages like NumPy, SciPy, Geopandas, Matplotlib, Scikit-Learn, Keras
+
+**Details:** Full-time; \$80K - \$115K salary, depending on experience
+
+**Date Posted (to BrenConnect):** November 4, 2025
+:::
 
 Along with variety in sectors, roles reflected a wide range of environmental niches. The top three pertained to geospatial work (16% of all positions), resource management (15%), or those focused water/coastal resources (12.5%). It should be noted that most consulting positions, unless a specific environment was listed, were categorized under resource management.
 
@@ -179,8 +226,8 @@ ggplot(aes(x = count, y = reorder(region, -count))) +
 location_bar
 ```
 
-
 It is important to mention that although the "West Coast" theoretically represents California, Oregon, and Washington, this data is made up of 38 jobs located in California and only 3 in Washington.
+
 ```{r}
 #| echo: false
 # map of United States
@@ -215,7 +262,8 @@ location_map <- us_map %>%
   theme(
     axis.text = element_blank(),
     axis.title = element_blank(),
-    axis.ticks = element_blank()
+    axis.ticks = element_blank(),
+     plot.margin = unit(c(0.5, 0.5, 0.5, 0.5), "cm")
   )
 
 location_map
@@ -232,6 +280,24 @@ countries <- unique(fall$country)
 There were a total of 4 international positions posted, in India, Sweden, Canada, and the UK. There was also one role in Puerto Rico.
 
 ## Position Details
+
+```{r}
+#| echo: false
+ fall %>% 
+   drop_na(position_type) %>% 
+  group_by(position_type) %>% 
+  summarize(count = n()) %>% 
+ggplot(aes(x = count, y = reorder(position_type, -count))) + 
+  geom_bar(stat = "identity",
+           color = bren_blue,
+           fill = alpha(bren_blue, 0.5)) +
+  geom_text(aes(label = count), hjust = -0.5) +
+  labs(title = "Position Title",
+       x = "Number of Positions") +
+  theme_classic() +
+  theme(axis.title.y = element_blank(),
+        plot.margin = unit(c(0.5, 0.5, 0.5, 0.5), "cm")) 
+```
 
 Overall, the majority of jobs were permanent, full-time, and on-site positions. Jobs were classified as "limited term" if they listed specific durations, such as "one-year placement".
 
@@ -293,7 +359,45 @@ commitment / type / modality +
   plot_layout(axes = "collect")
 ```
 
-The median salary of all positions is 75,070 US dollars (represented by the green line). The breakdown by sector can be seen below.
+::: {.callout-note collapse="true" icon="false"}
+## Position with Remote Option: Forest Carbon Analyst \@ Green Diamond
+
+**Location:** Can be based in any state where Green Diamond operates; work may be performed remotely or from one of Green Diamond's offices. Preference will be given to candidates in the Seattle, WA area.
+
+**Description:** Green Diamond is one of the five largest timberland owner-operators in the U.S., managing land in nine states throughout the western and southern U.S. with a commitment to sustainable forest management. They are hiring a forest carbon analyst to support the company’s forest carbon program. Position responsibilities include maintaining a calendarized workflow of project activities, assisting with the design and implementation of forest carbon inventories (including data collection, growth and yield analyses, and calculation of forest carbon metrics), and support development of analytical and spatial tools to improve project efficiency and accuracy.
+
+**Desired Qualifications:** “You’re curious, analytical, and inspired by the role forests play in tackling climate change. Whether you already have a few years of forest carbon experience or come from a strong quantitative forestry background, you love solving complex problems and learning new systems. You thrive on collaboration and are excited to make a measurable impact by supporting high-quality forest carbon projects.”
+
+**Details:** Full-time; \$79K – \$119K salary
+
+**Date Posted (to BrenConnect):** November 10, 2025
+:::
+
+:::: {.callout-note collapse="true" icon="false"}
+## Limited Term Position: Natural Resources Planning Intern \@ San Francisco Public Utilities Commission
+
+**Location:** San Francisco, CA (hybrid)
+
+**Description:** The San Francisco Public Utilities Commission is responsible for the management of over 61,000 acres of local watershed lands; the Natural Resources and Lands Management Division provides direction for watershed protection, planning, research, operations, and training. Within this division, the Planning and Compliance Section is currently seeking a natural resources planning intern to support the development of a Habitat Conservation Plan and other resource management plans. The position will involve aspects of natural resource planning; environmental compliance; habitat assessment, monitoring, and restoration; and geospatial data collection, management, and analysis.
+
+**Desired Qualifications:**
+
+-   Enrollment or graduation from (within 6 months) a biology or environmental management related field at an accredited university or community college.
+
+-   3-4 years education or experience in disciplines including but not limited to environmental planning, geography, environmental science, and/or natural resources.
+
+-   Knowledge of resource management, watershed management, or conservation planning.
+
+-   Proficiency using GIS for data collection and management as well as environmental analysis.
+
+-   Experience with database management, Microsoft Office platform, and technical writing.
+
+**Details:** Part-time (20 hours/week); \$36.65 - \$41.24 hourly pay; 12-month duration, with opportunity for extension
+
+**Date Posted (to BrenConnect):** January 3, 2026
+:::
+
+The median compensation of all salaried positions (meaning, excluding part-time work and internships) is 74,850 US dollars. The breakdown by sector can be seen below.
 
 ```{r}
 #| echo: false
@@ -304,8 +408,8 @@ fall_salary <- fall %>%
          job_type != "part-time",
          job_type != "internship")
 
-median_salary <- median(fall$median_salary, na.rm = TRUE)
-mean_salary <- mean(fall$median_salary, na.rm = TRUE)
+median_salary <- median(fall_salary$median_salary)
+mean_salary <- mean(fall_salary$median_salary, na.rm = TRUE)
 
 salary <- ggplot(data = fall_salary, aes(x = median_salary)) + 
   geom_boxplot(color = bren_blue,
@@ -327,7 +431,11 @@ salary_sector <- ggplot(data = fall_salary, aes(x = median_salary,
   labs(x = "Annual Compensation (US Dollars)",
        y = " ") +
   theme_classic() +
-  geom_vline(aes(xintercept = 75070), color = "#78a441", lwd = 1)
+  
+  geom_labelvline(xintercept = median_salary, 
+                  color = bren_green, label = "Median Salary: $74850",
+                  size = 3) 
+
 
 salary_sector
 ```
@@ -370,6 +478,26 @@ ggplot(skills_count, aes(x = reorder(skills, skills_sum), y = skills_sum)) +
 
 It was common for positions to not list a specific coding language, but instead use terms such as "data analysis" or "spatial analysis" to convey their qualifications.
 
+::: {.callout-note collapse="true" icon="false"}
+## GIS and R Desired: Project Management and GIS Specialist \@ The Great Basin Institute
+
+**Location:** South Lake Tahoe, CA (hybrid)
+
+**Description:** The Great Basin Institute is an interdisciplinary field studies organization that promotes environmental research, education, and service throughout the western United States. Their Research Associate Program, in cooperation with California Tahoe Conservancy, is hiring a project management and GIS specialist to provide project management, GIS, and data management services for the Tahoe-Central Sierra Initiative. Job responsibilities will revolve around bulk data entry and management, specifically involving ESRI GIS and spatial data.
+
+**Desired Qualifications:**
+
+-   Bachelor’s degree in a related field with coursework and/or experience that demonstrate understanding of the principles of natural resources management, forestry, and geographic information systems (GIS).
+-   Strong proficiency with GIS software- particularly the ESRI suite, including ArcGIS Pro and ArcMap, with demonstrated experience using tools and workflows to develop high-quality maps, manage and analyze geospatial datasets, and organize complex spatial layers.
+-   Experience with managing large datasets of tabular and spatial data.
+-   Working knowledge of Python and R and committed to continued skill growth in data analysis and scripting.
+
+**Details:** Full-time; \$31.00 - \$35.50 hourly pay; two-year term, with possible extension
+
+**Date Posted (to BrenConnect):** December 6, 2025
+:::
+
 ## Conclusion
 
 104 environmental data science positions were retrieved from online job boards between October 28, 2025 through January 3, 2026. They covered roles in all sectors and a wide range of environmental focuses, and varied in salary, modality, commitment length, and position type. The most popular data analysis qualifications were proficiency in GIS and R.
+
