@@ -1,0 +1,168 @@
+---
+title: "Visualizations for Inforgraphic"
+author: "Sofia Sarak"
+format: html
+editor: visual
+---
+
+Read in Data
+
+```{r}
+#| warning: false
+#| message: false
+#| echo: false
+# Load necessary packages
+library(tidyverse)
+library(here)
+library(janitor)
+library(ggplot2)
+library(patchwork)
+library(maps)
+library(geomtextpath)
+
+# for bubble chart
+library(packcircles)
+library(ggforce)
+```
+
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+
+# Load fall quarter data
+fall <- read_csv(here("data/fall_posts.csv")) %>% 
+  clean_names() %>%
+  
+  mutate(season = "fall") %>% 
+  
+  mutate(region = case_when(
+    city == "Washington, DC" ~ "Washington,D.C.",
+    
+    state == "AB" ~ NA,
+    
+    state == "AK" ~ "Alaska",
+    
+    state == "HI" ~ "Hawaii",
+    
+    state %in% c("Multiple", "TX/NM") ~ NA,
+    
+    # West Coast
+    state %in% c("CA", "OR", "WA") ~ "West Coast",
+    
+    # Southwest
+    state %in% c("AZ", "NM", "TX", "NV") ~ "Southwest",
+    
+    # Rocky Mountains
+    state %in% c("CO", "UT", "WY", "MT", "ID") ~ "Rocky Mountains",
+    
+    # Great Plains
+    state %in% c("ND", "SD", "NE", "KS", "OK", "IA", "MO") ~ "Great Plains",
+    
+    # Great Lakes
+    state %in% c("MN", "WI", "MI", "IL", "IN", "OH") ~ "Great Lake",
+    
+    # Mideast
+    state %in% c("NY", "NJ", "PA", "DE", "MD", "DC") ~ "Mideast",
+    
+    # New England
+    state %in% c("ME", "NH", "VT", "MA", "RI", "CT") ~ "New England",
+    
+    # Southeast
+    state %in% c("VA", "WV", "KY", "TN", "NC", "SC", "GA",
+                 "FL", "AL", "MS", "AR", "LA") ~ "Southeast",
+    
+    # Default (keeps state abbreviation if unmatched)
+    TRUE ~ state
+  )) %>% 
+  mutate(position_type = str_replace(position_type, "reseacher", "researcher"),
+         position_type = str_replace(position_type, "specialist", "data specialist"),
+         position_type = str_replace(position_type, "data data specialist", "data specialist"),
+         position_type = str_replace(position_type, "machine learning data specialist", "machine learning specialist"))
+
+# Load winter quarter data
+winter <- read_csv(here("data/winter_posts.csv")) %>% 
+  clean_names() %>%
+  mutate(yearly_salary_min = as.numeric(yearly_salary_min),
+         yearly_salary_max = as.numeric(yearly_salary_max)) %>% 
+  
+   mutate(season = "winter",
+          sector = case_when(
+            sector == "International Organization" ~ "Federal Government",
+            TRUE ~ sector
+          )) %>% 
+  
+  mutate(region = case_when(
+    city == "Washington, DC" ~ "Washington,D.C.",
+    
+    state == "AB" ~ NA,
+    
+    state == "AK" ~ "Alaska",
+    
+    state == "HI" ~ "Hawaii",
+    
+    state %in% c("Multiple", "TX/NM") ~ NA,
+    
+    # West Coast
+    state %in% c("CA", "OR", "WA") ~ "West Coast",
+    
+    # Southwest
+    state %in% c("AZ", "NM", "TX", "NV") ~ "Southwest",
+    
+    # Rocky Mountains
+    state %in% c("CO", "UT", "WY", "MT", "ID") ~ "Rocky Mountains",
+    
+    # Great Plains
+    state %in% c("ND", "SD", "NE", "KS", "OK", "IA", "MO") ~ "Great Plains",
+    
+    # Great Lakes
+    state %in% c("MN", "WI", "MI", "IL", "IN", "OH") ~ "Great Lake",
+    
+    # Mideast
+    state %in% c("NY", "NJ", "PA", "DE", "MD", "DC") ~ "Mideast",
+    
+    # New England
+    state %in% c("ME", "NH", "VT", "MA", "RI", "CT") ~ "New England",
+    
+    # Southeast
+    state %in% c("VA", "WV", "KY", "TN", "NC", "SC", "GA",
+                 "FL", "AL", "MS", "AR", "LA") ~ "Southeast",
+    
+    # Default (keeps state abbreviation if unmatched)
+    TRUE ~ state
+  )) %>% 
+  mutate(position_type = str_replace(position_type, "reseacher", "researcher"),
+         position_type = str_replace(position_type, "specialist", "data specialist"),
+         position_type = str_replace(position_type, "data data specialist", "data specialist"),
+         position_type = str_replace(position_type, "machine learning data specialist", "machine learning specialist"))
+
+all_posts <- bind_rows(fall, winter)
+```
+
+Save theme colors
+```{r}
+bren_blue <- "#003660"
+bren_green <- "#78a441"
+apricot <- "#F5CDA7"
+tangerine <- "#FAA381"
+lavender <- "#8E9AAF"
+```
+
+Prepare data to make packed bubble chart (or use area chart?? like with the boxes)
+```{r}
+all_bubble <- all_posts %>% 
+  count(environmental_field, sort = TRUE) %>% 
+  head(10) %>%
+  mutate(circleProgressiveLayout(n, sizetype = "area"),
+         label = paste0(environmental_field))
+```
+
+```{r}
+ggplot(all_bubble, aes(x0 = x, y0 = y)) +
+  geom_circle(aes(r = radius), fill = bren_blue, color = NA) +
+  geom_text(aes(x = x, y = y, label = paste0(label, n)),
+            color = "white") +
+  coord_equal() +
+  theme_void()
+```
+

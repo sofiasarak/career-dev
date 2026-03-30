@@ -247,13 +247,13 @@ Along with variety in sectors, roles reflected a wide range of environmental nic
 ```{r}
 #| echo: false
 
-stats_field <- fall %>% 
+stats_field <- all_posts %>% 
   group_by(environmental_field) %>% 
   mutate(quantity = n(),
          percent_total = n()/total * 100) %>% 
   select(environmental_field, percent_total)
 
-fall %>% 
+all_posts %>% 
   group_by(environmental_field) %>% 
   summarize(count = n()) %>% 
 ggplot(aes(x = count, y = reorder(environmental_field, count))) + 
