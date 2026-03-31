@@ -19,10 +19,12 @@ library(ggplot2)
 library(patchwork)
 library(maps)
 library(geomtextpath)
+library(showtext)
 
 # for bubble chart
 library(packcircles)
 library(ggforce)
+library(treemap)
 ```
 
 ```{r}
@@ -136,6 +138,7 @@ winter <- read_csv(here("data/winter_posts.csv")) %>%
          position_type = str_replace(position_type, "data data specialist", "data specialist"),
          position_type = str_replace(position_type, "machine learning data specialist", "machine learning specialist"))
 
+# combine the two
 all_posts <- bind_rows(fall, winter)
 ```
 
@@ -146,23 +149,269 @@ bren_green <- "#78a441"
 apricot <- "#F5CDA7"
 tangerine <- "#FAA381"
 lavender <- "#8E9AAF"
+sky_blue <- "#76BED0"
+ivory <- "#F5F9E9"
+
+font_add_google(name = "IBM Plex Sans", family = "plex")
+
+# Create theme for all visualizations
+report_theme <- theme_classic() +
+  theme(axis.title.y = element_blank())
 ```
+
+```{r}
+skills_pal <- c(
+  "R" = bren_blue,
+  "GIS" = bren_green,
+  "SQL" = tangerine,
+  "Excel" = lavender,
+  "Python" = sky_blue,
+  "Power BI" = apricot
+)
+```
+
+
+Sectors: Bar Chart
+```{r}
+showtext_auto(enable = TRUE)
+
+all_posts %>% 
+  group_by(sector) %>% 
+  summarize(count = n()) %>% 
+ggplot(aes(x = reorder(sector, count), y = count)) +
+  geom_col(color = bren_blue, fill = alpha(bren_blue, 0.8)) + # position = "dodge"
+  geom_text(aes(label = count), hjust = -1,
+            color = ivory) +
+  labs(y = " ") +
+  coord_flip() +
+  report_theme +
+  scale_x_discrete(position = "top") +
+  scale_y_reverse() +
+  theme(
+   axis.text = element_text(family = "plex"),
+   axis.line.x = element_blank(),
+   axis.text.x = element_blank(),
+   axis.ticks.x = element_blank()
+  )
+
+ggsave("plots/sector.pdf")
+
+showtext_auto(enable = FALSE)
+```
+
+
 
 Prepare data to make packed bubble chart (or use area chart?? like with the boxes)
 ```{r}
 all_bubble <- all_posts %>% 
   count(environmental_field, sort = TRUE) %>% 
-  head(10) %>%
+  head(9) %>%
+  
+  # Capitalize environmental fields
+  mutate(environmental_field_cap = case_when(
+    environmental_field == "geospatial" ~ "Geospatial Analysis",
+    environmental_field == "sustainability" ~ "Sustainability",
+    environmental_field == "water/coastal" ~ "Water/Coastal",
+    environmental_field == "energy and infrastructure" ~ "Energy & Infrastructure",
+    environmental_field == "resource management" ~ "Resource Management",
+    environmental_field == "climate" ~ "Climate",
+    environmental_field == "conservation" ~ "Conservation",
+    environmental_field == "policy" ~ "Policy",
+    environmental_field == "agriculture" ~ "Agriculture",
+    #environmental_field == "communication" ~ "Communication",
+    TRUE ~ environmental_field
+  )) %>% 
+  
   mutate(circleProgressiveLayout(n, sizetype = "area"),
-         label = paste0(environmental_field))
+         label = paste0(environmental_field_cap))
+  
+ 
+```
+
+Bubble chart
+```{r}
+showtext_auto(enable = TRUE)
+
+ggplot(all_bubble, aes(x0 = x, y0 = y)) +
+  geom_circle(aes(r = radius), fill = alpha(bren_green, 0.8), color = bren_green) +
+  geom_text(aes(x = x, y = y, label = paste0(label, "\n", n)),
+            color = ivory, family = "plex") +
+  theme_void()
+
+ggsave("plots/bubble.pdf")
+
+showtext_auto(enable = FALSE)
+```
+Treemap trial
+```{r}
+#| execute: false
+all_posts %>% 
+  count(environmental_field, sort = TRUE) %>% 
+  head(7) %>%
+  treemap(
+        index = "environmental_field",
+        vSize = "n",
+        type = "index")
+```
+Skills treemap
+```{r}
+#| echo: false
+# Create columns that contain TRUE/FALSE values for hard skills mentioned
+all_skills <- all_posts %>% 
+  mutate(R_req = stringr::str_detect(all_posts$hard_skills, "R"), 
+         Python_req = stringr::str_detect(all_posts$hard_skills, "Python"),
+         GIS_req = stringr::str_detect(all_posts$hard_skills, "GIS"),
+         Excel_req = stringr::str_detect(all_posts$hard_skills, "Excel"),
+         SQL_req = stringr::str_detect(all_posts$hard_skills, "SQL"),
+         Power_req = stringr::str_detect(all_posts$hard_skills, "Power BI"))
+
+# Create data frame with the number of positions that mentioned each skill
+skills <- c("R", "Python", "GIS", "Excel", "SQL", "Power BI")
+
+skills_sum <- c(sum(all_skills$R_req, na.rm = TRUE), sum(all_skills$Python_req, na.rm = TRUE), sum(all_skills$GIS_req, na.rm = TRUE), sum(all_skills$Excel_req, na.rm = TRUE), sum(all_skills$SQL_req, na.rm = TRUE), sum(all_skills$Power_req, na.rm = TRUE))
+
+skills_count <- data.frame(skills, skills_sum) %>% 
+  mutate(percent = round(skills_sum/nrow(all_posts) * 100),
+         label = paste0(skills, "\n", percent, "%"))
+
+skills_count %>% 
+  treemap(
+    index = "label",
+    vSize = "skills_sum",
+    type = "index"
+  )
 ```
 
 ```{r}
-ggplot(all_bubble, aes(x0 = x, y0 = y)) +
-  geom_circle(aes(r = radius), fill = bren_blue, color = NA) +
-  geom_text(aes(x = x, y = y, label = paste0(label, n)),
-            color = "white") +
-  coord_equal() +
-  theme_void()
+library(treemapify)
+
+showtext_auto(enable = TRUE)
+
+# Build treemap with custom labels
+ggplot(skills_count, aes(area = skills_sum, label = label)) +
+                         #fill = skills)) + # Combine labels in aes
+  geom_treemap(alpha = 0.8, color = ivory, fill = bren_blue) +
+  geom_treemap_text(
+    place = "centre", # Position
+    size = 12,        # Font size
+    color = ivory,  # Font color
+    family = "plex"  # Font family
+  ) +
+  scale_fill_manual(values = skills_pal) +
+  theme(legend.position = "none") # Remove legend 
+
+ggsave("plots/skills.pdf")
+
+showtext_auto(enable = FALSE)
+```
+
+```{r}
+#| execute: false
+# Plot data frame
+ggplot(skills_count, aes(x = reorder(skills, skills_sum), y = skills_sum)) +
+  geom_col(color = bren_blue,
+           fill = alpha(bren_blue, 0.8)) +
+  geom_text(aes(label = skills_sum), hjust = -0.5) +
+  coord_flip() +
+  labs(y = "Number of Positions", 
+       x = "Hard Skill Mentioned") +
+  theme_classic()
+```
+
+Position details bar charts
+```{r}
+library(patchwork)
+
+showtext_auto(enable = TRUE)
+
+commitment <- all_posts %>% 
+  group_by(term) %>% 
+  summarize(count = n()) %>% 
+  filter(term != "part-time") %>% 
+ggplot(aes(x = reorder(term, -count), y = count)) + 
+  geom_bar(stat = "identity",
+           color = bren_blue,
+           fill = alpha(bren_blue, 0.8)) +
+  geom_text(aes(label = count), vjust = 1.5,
+            color = ivory) +
+  labs(title = "Commitment Length",
+       y = "Number of Positions") +
+  theme_classic() +
+  scale_x_discrete(labels = c("Permanent", "Limited Term")) +
+  theme(axis.title.x = element_blank(),
+        text = element_text(family = "plex")) +
+  ylim(0, 200)
+
+type <- all_posts %>% 
+  mutate(job_type = case_when(
+    job_type == "short-term project" ~ "internship",
+    TRUE ~ job_type)) %>% 
+  group_by(job_type) %>% 
+  summarize(count = n()) %>% 
+ggplot(aes(x = reorder(job_type, -count), y = count)) + 
+  geom_bar(stat = "identity",
+           color = bren_blue,
+           fill = alpha(bren_blue, 0.8)) +
+  geom_text(aes(label = count), vjust = 1.5,
+            color = ivory) +
+  labs(title = "Position Type",
+       y = "Number of Positions") +
+  theme_classic() +
+  scale_x_discrete(labels = c("Full-time", "Internship", "Fellowship", "Part-time")) +
+  theme(axis.title.x = element_blank(),
+        text = element_text(family = "plex")) +
+  ylim(0, 200)
+
+# * note that short term project was lumped into internship!
+
+modality <- all_posts %>% 
+  group_by(modality) %>% 
+  summarize(count = n()) %>% 
+ggplot(aes(x = reorder(modality, -count), y = count)) + 
+  geom_bar(stat = "identity",
+           color = bren_blue,
+           fill = alpha(bren_blue, 0.8)) +
+  geom_text(aes(label = count), vjust = 1.5,
+            color = ivory) +
+  labs(title = "Modality", y = "Number of Positions") +
+  theme_classic() +
+   scale_x_discrete(labels = c("On-site", "Hybrid", "Remote", "Remote Option", "Hybrid Option")) +
+  theme(axis.title.x = element_blank(),
+        text = element_text(family = "plex")) +
+  ylim(0, 150)
+
+commitment / type / modality +
+  plot_layout(axes = "collect")
+
+ggsave("plots/position_type2.pdf", height = 6)
+
+showtext_auto(enable = FALSE)
+```
+
+Salary
+```{r}
+
+showtext_auto(enable = TRUE)
+all_posts %>% 
+  mutate(median_salary = (yearly_salary_min + yearly_salary_max)/2) %>% 
+  filter(median_salary != 0,
+         job_type != "part-time",
+         job_type != "internship") %>% 
+  
+  ggplot(aes(x = median_salary, y = reorder(sector, median_salary))) + 
+  geom_boxplot(color = bren_blue,
+           fill = alpha(bren_blue, 0.5)) +
+  labs(x = "Annual Compensation (US Dollars)",
+       y = " ") +
+  theme_classic() +
+  theme(text = element_text(family = "plex"))
+  
+ # geom_labelvline(xintercept = median_salary, 
+                 # color = bren_green, label = "Median Salary: $74850",
+                  #size = 3) 
+
+ggsave("plots/salary.pdf")
+
+showtext_auto(enable = FALSE)
 ```
 
