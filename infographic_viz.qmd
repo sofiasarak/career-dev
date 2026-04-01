@@ -295,7 +295,9 @@ ggplot(skills_count, aes(area = skills_sum, label = label)) +
     place = "centre", # Position
     size = 12,        # Font size
     color = ivory,  # Font color
-    family = "plex"  # Font family
+    family = "plex",  # Font family
+    grow = TRUE,
+    reflow = TRUE
   ) +
   scale_fill_manual(values = skills_pal) +
   theme(legend.position = "none") # Remove legend 
@@ -420,7 +422,7 @@ all_posts %>%
                  # color = bren_green, label = "Median Salary: $74850",
                   #size = 3) 
 
-#ggsave("plots/salary.pdf")
+#ggsave("plots/salary_vert.pdf")
 
 showtext_auto(enable = FALSE)
 ```
@@ -477,5 +479,7 @@ us_map %>%
   )
 
 showtext_auto(enable = FALSE)
+
+#ggsave("plots/map.pdf")
 ```
 
