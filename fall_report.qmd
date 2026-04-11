@@ -373,7 +373,7 @@ commitment / type / modality +
 **Date Posted (to BrenConnect):** November 10, 2025
 :::
 
-:::: {.callout-note collapse="true" icon="false"}
+::: {.callout-note collapse="true" icon="false"}
 ## Limited Term Position: Natural Resources Planning Intern \@ San Francisco Public Utilities Commission
 
 **Location:** San Francisco, CA (hybrid)
@@ -500,4 +500,3 @@ It was common for positions to not list a specific coding language, but instead 
 ## Conclusion
 
 104 environmental data science positions were retrieved from online job boards between October 28, 2025 through January 3, 2026. They covered roles in all sectors and a wide range of environmental focuses, and varied in salary, modality, commitment length, and position type. The most popular data analysis qualifications were proficiency in GIS and R.
-

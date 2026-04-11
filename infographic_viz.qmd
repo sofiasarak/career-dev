@@ -143,6 +143,7 @@ all_posts <- bind_rows(fall, winter)
 ```
 
 Save theme colors
+
 ```{r}
 bren_blue <- "#003660"
 bren_green <- "#78a441"
@@ -170,8 +171,8 @@ skills_pal <- c(
 )
 ```
 
-
 Sectors: Bar Chart
+
 ```{r}
 showtext_auto(enable = TRUE)
 
@@ -199,9 +200,8 @@ ggsave("plots/sector.pdf")
 showtext_auto(enable = FALSE)
 ```
 
-
-
 Prepare data to make packed bubble chart (or use area chart?? like with the boxes)
+
 ```{r}
 all_bubble <- all_posts %>% 
   count(environmental_field, sort = TRUE) %>% 
@@ -229,6 +229,7 @@ all_bubble <- all_posts %>%
 ```
 
 Bubble chart
+
 ```{r}
 showtext_auto(enable = TRUE)
 
@@ -242,7 +243,9 @@ ggsave("plots/bubble.pdf")
 
 showtext_auto(enable = FALSE)
 ```
+
 Treemap trial
+
 ```{r}
 #| execute: false
 all_posts %>% 
@@ -253,7 +256,9 @@ all_posts %>%
         vSize = "n",
         type = "index")
 ```
+
 Skills treemap
+
 ```{r}
 #| echo: false
 # Create columns that contain TRUE/FALSE values for hard skills mentioned
@@ -321,6 +326,7 @@ ggplot(skills_count, aes(x = reorder(skills, skills_sum), y = skills_sum)) +
 ```
 
 Position details bar charts
+
 ```{r}
 library(patchwork)
 
@@ -391,10 +397,11 @@ showtext_auto(enable = FALSE)
 ```
 
 Salary
+
 ```{r}
 
 showtext_auto(enable = TRUE)
-all_posts %>% 
+all_posts <- all_posts %>% 
   mutate(median_salary = (yearly_salary_min + yearly_salary_max)/2) %>% 
   filter(median_salary != 0,
          job_type != "part-time",
@@ -428,6 +435,7 @@ showtext_auto(enable = FALSE)
 ```
 
 Location map
+
 ```{r}
 # map of United States
 
@@ -482,4 +490,3 @@ showtext_auto(enable = FALSE)
 
 #ggsave("plots/map.pdf")
 ```
-

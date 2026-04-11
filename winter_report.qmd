@@ -1,14 +1,15 @@
 ---
-title: "EDS Job Market Report: Winter"
+title: "EDS Job Market Report: Winter Quarter"
+subtitle: "Data collected between October 2025 and March 2026"
 author: "Sofia Sarak"
-date: March 29, 2026
+date: April 11, 2026
 format: html
 editor: visual
 ---
 
 The following report contains statistics and visualizations summarizing the job openings being posted to online services such as [Indeed](https://www.indeed.com/jobs?q=environmental+data+science&l=&from=searchOnHP&vjk=b9ae5b9d8d4a16b4), [Conservation Job Board](https://www.conservationjobboard.com/), [CalCareers](https://calcareers.ca.gov/CalHRPublic/Search/JobSearchResults.aspx#kw=environmental%20data), and others. Keywords such "environmental data science", "environmental analyst", and "climate analyst" (just to name a few, though a wide range were used) were searched for, and roles pertaining to environmental data analysis, planning, or communication were pulled and re-posted on the [BrenConnect website](https://brenconnect.bren.ucsb.edu/s/group/0F9Kg0000004CHNKA2/meds-2026-jobinternship-opportunities). These posts are what make up the data used in the following report, and examples of positions are included throughout.
 
-This specific report builds off of its predecessor, which was based on job posts solely from the Fall Quarter (collected from October 2025 to January 2026).
+This report summarizes combined data collected between October 2025 and March 2026, and offers a brief comparison between the fall (October through early January) and winter (January through March) quarters. **In total, there are 234 job listings summarized in this report, with 104 pertaining to the fall and the other 130 to the winter.**
 
 ### MEDS 2026 Cohort
 
@@ -16,16 +17,13 @@ The Master of Environmental Data Science (MEDS) program at the Bren School teach
 
 Although most, if not all, positions that exemplified the skills taught in the MEDS program were posted, the job search was somewhat customized to the preferences of the current cohort. This was likely most influential when considering the location of the position, as the current class is particularly interested in California, the West Coast of the United States, Texas, and large cities such as New York City and Washington, D.C, with some international interest as well. Some students are also partial to remote positions.
 
-These factors guide the job openings posted on BrenConnect, and therefore the results presented in this report. In total, **there are 104 positions included in the dataset, collected between October 2025 and January 2026.**
+These factors guide the job openings posted on BrenConnect, and therefore the results presented in this report. 
 
-### Sample Position Descriptions
-
-## Employer Information
 
 ```{r}
-#| warning: false
-#| message: false
 #| echo: false
+#| message: false
+#| warning: false
 # Load necessary packages
 library(tidyverse)
 library(here)
@@ -45,64 +43,34 @@ library(geomtextpath)
 fall <- read_csv(here("data/fall_posts.csv")) %>% 
   clean_names() %>%
   
-  mutate(season = "fall") %>% 
-  
-  mutate(region = case_when(
-    city == "Washington, DC" ~ "Washington,D.C.",
-    
-    state == "AB" ~ NA,
-    
-    state == "AK" ~ "Alaska",
-    
-    state == "HI" ~ "Hawaii",
-    
-    state %in% c("Multiple", "TX/NM") ~ NA,
-    
-    # West Coast
-    state %in% c("CA", "OR", "WA") ~ "West Coast",
-    
-    # Southwest
-    state %in% c("AZ", "NM", "TX", "NV") ~ "Southwest",
-    
-    # Rocky Mountains
-    state %in% c("CO", "UT", "WY", "MT", "ID") ~ "Rocky Mountains",
-    
-    # Great Plains
-    state %in% c("ND", "SD", "NE", "KS", "OK", "IA", "MO") ~ "Great Plains",
-    
-    # Great Lakes
-    state %in% c("MN", "WI", "MI", "IL", "IN", "OH") ~ "Great Lake",
-    
-    # Mideast
-    state %in% c("NY", "NJ", "PA", "DE", "MD", "DC") ~ "Mideast",
-    
-    # New England
-    state %in% c("ME", "NH", "VT", "MA", "RI", "CT") ~ "New England",
-    
-    # Southeast
-    state %in% c("VA", "WV", "KY", "TN", "NC", "SC", "GA",
-                 "FL", "AL", "MS", "AR", "LA") ~ "Southeast",
-    
-    # Default (keeps state abbreviation if unmatched)
-    TRUE ~ state
-  )) %>% 
-  mutate(position_type = str_replace(position_type, "reseacher", "researcher"),
-         position_type = str_replace(position_type, "specialist", "data specialist"),
-         position_type = str_replace(position_type, "data data specialist", "data specialist"),
-         position_type = str_replace(position_type, "machine learning data specialist", "machine learning specialist"))
+  # Denote that these data come from the fall quarter
+  mutate(season = "fall")
+
 
 # Load winter quarter data
 winter <- read_csv(here("data/winter_posts.csv")) %>% 
   clean_names() %>%
+  
+  # Fix data types
   mutate(yearly_salary_min = as.numeric(yearly_salary_min),
          yearly_salary_max = as.numeric(yearly_salary_max)) %>% 
   
+  # Denote that these data come from the winter quarter
    mutate(season = "winter",
+          
+          # Fix observations to match standards
           sector = case_when(
             sector == "International Organization" ~ "Federal Government",
-            TRUE ~ sector
-          )) %>% 
+            TRUE ~ sector))
+
+# Join into one
+all <- bind_rows(fall, winter)
+
+# Clean joined data frame
+
+all_clean <- all %>% 
   
+  # Apply geographic groupings for summaries and viz
   mutate(region = case_when(
     city == "Washington, DC" ~ "Washington,D.C.",
     
@@ -142,69 +110,63 @@ winter <- read_csv(here("data/winter_posts.csv")) %>%
     # Default (keeps state abbreviation if unmatched)
     TRUE ~ state
   )) %>% 
+  
+  # Fix some position types
   mutate(position_type = str_replace(position_type, "reseacher", "researcher"),
          position_type = str_replace(position_type, "specialist", "data specialist"),
          position_type = str_replace(position_type, "data data specialist", "data specialist"),
          position_type = str_replace(position_type, "machine learning data specialist", "machine learning specialist"))
 
-all_posts <- bind_rows(fall, winter)
+specialist <- fall$position_type[str_detect(unique(fall$position_type), "specialist")]
 ```
-
 
 ```{r}
 #| echo: false
 #| message: false
 # Create theme for all visualizations
-report_theme <- theme_classic() +
-  theme(axis.title.y = element_blank())
+report_theme <- function(){
+  theme_classic() +
+  theme(axis.title.y = element_blank())}
 
 bren_blue <- "#003660"
 bren_green <- "#78a441"
-
-specialist <- fall$position_type[str_detect(unique(fall$position_type), "specialist")]
+ivory <- "#F5F9E9"
 ```
 
-### Sector and Environmental Field
+# Complete Data
 
-The majority (33%) of the positions found were in the consulting sector. Following consulting:
+## Sector
 
--   Corporate: 17%
+The Career Development Team classifies alumni employment into seven categories. Following this system, we find that the majority of position listing were in **consulting** (27% of all posts). The other sectors break down as:
 
--   Research/Education: 16%
-
--   State Government: 16%
-
--   Non-profit/NGOs: 11%
-
--   Local Government: 9%
+- Corporate: 21%
+- Non-Profit/NGO: 15%
+- State Government: 12%
+- Local Government: 12%
+- Research/Education: 11%
+- Federal Government: 2%
 
 ```{r}
 #| echo: false
-#| message: false
-
-# the stats
-total <- nrow(fall)
-
-stats_sector <- all_posts %>% 
+all_clean %>% 
   group_by(sector) %>% 
-  mutate(quantity = n(),
-         percent_total = n()/total * 100) %>% 
-  select(sector, percent_total)
-
-
-all_posts %>% 
-  group_by(season, sector) %>% 
   summarize(count = n()) %>% 
-ggplot(aes(x = reorder(sector, count), y = count,
-           color = season, fill = season)) + 
-  geom_col() + # position = "dodge"
-  geom_text(aes(label = count), hjust = -0.5) +
-  labs(y = "Number of Positions") +
-  report_theme +
+ggplot(aes(x = reorder(sector, count), y = count)) +
+  geom_col(color = bren_blue, fill = alpha(bren_blue, 0.7)) + # position = "dodge"
+  geom_text(aes(label = count), hjust = 1.5,
+            color = ivory) +
+  labs(y = " ") +
   coord_flip() +
-  scale_color_manual(values = c(bren_blue, bren_green)) +
-  scale_fill_manual(values = c(bren_blue, bren_green))
+  report_theme() +
+  #scale_x_discrete(position = "top") +
+  #scale_y_reverse() +
+  theme(
+   axis.line.x = element_blank(),
+   axis.text.x = element_blank(),
+   axis.ticks.x = element_blank()
+  )
 ```
+
 
 ::: {.callout-note collapse="true" icon="false"}
 ## Position in Consulting: Remote Sensing Scientist \@ Land IQ
@@ -242,30 +204,38 @@ ggplot(aes(x = reorder(sector, count), y = count,
 **Date Posted (to BrenConnect):** November 4, 2025
 :::
 
-Along with variety in sectors, roles reflected a wide range of environmental niches. The top three pertained to geospatial work (16% of all positions), resource management (15%), or those focused water/coastal resources (12.5%). It should be noted that most consulting positions, unless a specific environment was listed, were categorized under resource management.
+## Environmental Field
+
+Along with variety in sectors, roles reflected a wide range of environmental niches. The top three pertained to geospatial work (15% of all positions), water/coastal resources (14%), and sustainability (14%). It should be noted that most consulting positions, unless a specific environment was listed, were categorized under resource management.
 
 ```{r}
 #| echo: false
 
-stats_field <- all_posts %>% 
-  group_by(environmental_field) %>% 
-  mutate(quantity = n(),
-         percent_total = n()/total * 100) %>% 
-  select(environmental_field, percent_total)
-
-all_posts %>% 
+all_clean %>% 
+  
+   mutate(environmental_field = case_when(
+    is.na(environmental_field) ~ "other data analysis",
+    TRUE ~ environmental_field)) %>% 
+  
   group_by(environmental_field) %>% 
   summarize(count = n()) %>% 
+  
 ggplot(aes(x = count, y = reorder(environmental_field, count))) + 
   geom_bar(stat = "identity",
            color = bren_blue,
-           fill = alpha(bren_blue, 0.5)) +
-  geom_text(aes(label = count), hjust = -0.5) +
-  labs(x = "Number of Positions") +
-  report_theme
+           fill = alpha(bren_blue, 0.7)) +
+  geom_text(aes(label = count), hjust = 1.5,
+            color = ivory) +
+  labs(x = " ") +
+  report_theme() +
+   theme(
+   axis.line.x = element_blank(),
+   axis.text.x = element_blank(),
+   axis.ticks.x = element_blank()
+  )
 ```
 
-### Location
+## Location
 
 As mentioned, the preference of MEDS 2026 cohort had a big influence on which positions were reposted to BrenConnect, and therefore exist in this dataset. Primarily, there is a very large bias for roles located in California.
 
@@ -274,34 +244,41 @@ As mentioned, the preference of MEDS 2026 cohort had a big influence on which po
 
 # bar graph
 
-stats_region <- fall %>%  
+stats_region <- all_clean %>%  
   filter(region == "West Coast") %>% 
   group_by(state) %>% 
   summarize(count = n())
 
-location_bar <- fall %>% 
+location_bar <- all_clean %>% 
 filter(!is.na(region)) %>% 
 group_by(region) %>% 
   summarize(count = n()) %>% 
 ggplot(aes(x = count, y = reorder(region, -count))) + 
   geom_bar(stat = "identity",
            color = bren_blue,
-           fill = alpha(bren_blue, 0.5)) + 
-  geom_text(aes(label = count), hjust = -0.5) +
-  labs(title = "Number of Positions, by Region",
-  x = "Number of Positions") +
-  report_theme
+           fill = alpha(bren_blue, 0.8)) + 
+  geom_text(aes(label = count, hjust = ifelse(count > 4, 1.5, -1),
+            color = ifelse(count > 4, ivory, "black"))) +
+  
+   scale_color_identity(guide = "none") +
+  
+  labs(title = " ",
+  x =  " ") +
+  report_theme() +
+  theme(
+   axis.line.x = element_blank(),
+   axis.text.x = element_blank(),
+   axis.ticks.x = element_blank()
+  )
 
 location_bar
 ```
-
-It is important to mention that although the "West Coast" theoretically represents California, Oregon, and Washington, this data is made up of 38 jobs located in California and only 3 in Washington.
 
 ```{r}
 #| echo: false
 # map of United States
 
-state_counts <- fall %>%
+state_counts <- all_clean %>%
   filter(!is.na(state)) %>%
   count(state)
 
@@ -326,7 +303,7 @@ location_map <- us_map %>%
     na.value = "grey90"
   ) +
   labs(fill = " ",
-       title = "Number of Positions, by State") +
+       title = " ") +
   theme_void() +
   theme(
     axis.text = element_blank(),
@@ -338,29 +315,35 @@ location_map <- us_map %>%
 location_map
 ```
 
+
 ```{r}
 #| echo: false
 # international?
-international <- sum(fall$country != "USA")
+international <- sum(all_clean$country != "USA")
 
-countries <- unique(fall$country)
+countries <- unique(all_clean$country)
 ```
 
-There were a total of 4 international positions posted, in India, Sweden, Canada, and the UK. There was also one role in Puerto Rico.
+There were a total of 11 international positions posted, in India, Sweden, Canada, Singapore, the Netherlands, Australia, Austria, and the UK. There was also one role in Puerto Rico.
 
 ## Position Details
 
 ```{r}
 #| echo: false
- fall %>% 
+#| output: false
+
+# I chose not to include this summary in the report because I do not think the distinction between position titles such as "data analyst" and "data specialist" are distinct enough
+
+ all_clean %>% 
    drop_na(position_type) %>% 
   group_by(position_type) %>% 
   summarize(count = n()) %>% 
 ggplot(aes(x = count, y = reorder(position_type, -count))) + 
   geom_bar(stat = "identity",
            color = bren_blue,
-           fill = alpha(bren_blue, 0.5)) +
-  geom_text(aes(label = count), hjust = -0.5) +
+           fill = alpha(bren_blue, 0.8)) +
+  geom_text(aes(label = count), hjust = 1.5,
+            color = ivory) +
   labs(title = "Position Title",
        x = "Number of Positions") +
   theme_classic() +
@@ -370,63 +353,88 @@ ggplot(aes(x = count, y = reorder(position_type, -count))) +
 
 Overall, the majority of jobs were permanent, full-time, and on-site positions. Jobs were classified as "limited term" if they listed specific durations, such as "one-year placement".
 
-```{r}
-#| echo: false
-commitment <- fall %>% 
+```{r} 
+#| echo: false 
+commitment <- all_clean %>% 
   group_by(term) %>% 
   summarize(count = n()) %>% 
+  filter(term != "part-time") %>% 
 ggplot(aes(x = reorder(term, -count), y = count)) + 
   geom_bar(stat = "identity",
            color = bren_blue,
-           fill = alpha(bren_blue, 0.5)) +
-  geom_text(aes(label = count), vjust = -0.5) +
+           fill = alpha(bren_blue, 0.7)) +
+  geom_text(aes(label = count), vjust = 1.5,
+            color = ivory) +
   labs(title = "Commitment Length",
        y = "Number of Positions") +
   theme_classic() +
   scale_x_discrete(labels = c("Permanent", "Limited Term")) +
   theme(axis.title.x = element_blank()) +
-  ylim(0, 100)
-```
+  ylim(0, 200) +
+   theme(
+   axis.line.y = element_blank(),
+   axis.text.y = element_blank(),
+   axis.ticks.y = element_blank()
+  )
 
-```{r}
-#| echo: false
-type <- fall %>% 
+
+type <- all_clean %>% 
+  mutate(job_type = case_when(
+    job_type == "short-term project" ~ "internship",
+    TRUE ~ job_type)) %>% 
   group_by(job_type) %>% 
-  summarize(count = n()) %>% 
-ggplot(aes(x = reorder(job_type, -count), y = count)) + 
+  summarize(n = n()) %>% 
+ggplot(aes(x = reorder(job_type, -n), y = n)) + 
   geom_bar(stat = "identity",
            color = bren_blue,
-           fill = alpha(bren_blue, 0.5)) +
-  geom_text(aes(label = count), vjust = -0.5) +
+           fill = alpha(bren_blue, 0.7)) +
+  geom_text(aes(label = n, vjust = ifelse(n > 184, 1.5, -1),
+            color = ifelse(n > 184, ivory, "black"))) +
+  scale_color_identity(guide = "none") +
   labs(title = "Position Type",
        y = "Number of Positions") +
   theme_classic() +
-  scale_x_discrete(labels = c("Full-time", "Internship", "Part-time")) +
-  theme(axis.title.x = element_blank())
-```
+  scale_x_discrete(labels = c("Full-time", "Internship", "Fellowship", "Part-time")) +
+  theme(axis.title.x = element_blank()) +
+  ylim(0, 200) +
+   theme(
+   axis.line.y = element_blank(),
+   axis.text.y = element_blank(),
+   axis.ticks.y = element_blank()
+  )
 
-```{r}
-#| echo: false
-modality <- fall %>% 
+
+# * note that short term project was lumped into internship!
+
+modality <- all_clean %>% 
   group_by(modality) %>% 
-  summarize(count = n()) %>% 
-ggplot(aes(x = reorder(modality, -count), y = count)) + 
+  summarize(n = n()) %>% 
+ggplot(aes(x = reorder(modality, -n), y = n)) + 
   geom_bar(stat = "identity",
            color = bren_blue,
-           fill = alpha(bren_blue, 0.5)) +
-  geom_text(aes(label = count), vjust = -0.5) +
+           fill = alpha(bren_blue, 0.7)) +
+  geom_text(aes(label = n, vjust = ifelse(n > 60, 1.5, -1),
+            color = ifelse(n > 60, ivory, "black"))) +
+  
+  # tells ggplot to use the color strings literally and supresses legend
+  scale_color_identity(guide = "none") +
+  
   labs(title = "Modality", y = "Number of Positions") +
   theme_classic() +
    scale_x_discrete(labels = c("On-site", "Hybrid", "Remote", "Remote Option", "Hybrid Option")) +
   theme(axis.title.x = element_blank()) +
-  ylim(0, 80)
-```
+  ylim(0, 150) +
+   theme(
+   axis.line.y = element_blank(),
+   axis.text.y = element_blank(),
+   axis.ticks.y = element_blank()
+  )
 
-```{r}
-#| echo: false
+
 commitment / type / modality +
   plot_layout(axes = "collect")
 ```
+
 
 ::: {.callout-note collapse="true" icon="false"}
 ## Position with Remote Option: Forest Carbon Analyst \@ Green Diamond
@@ -442,7 +450,7 @@ commitment / type / modality +
 **Date Posted (to BrenConnect):** November 10, 2025
 :::
 
-:::: {.callout-note collapse="true" icon="false"}
+::: {.callout-note collapse="true" icon="false"}
 ## Limited Term Position: Natural Resources Planning Intern \@ San Francisco Public Utilities Commission
 
 **Location:** San Francisco, CA (hybrid)
@@ -466,50 +474,37 @@ commitment / type / modality +
 **Date Posted (to BrenConnect):** January 3, 2026
 :::
 
-The median compensation of all salaried positions (meaning, excluding part-time work and internships) is 74,850 US dollars. The breakdown by sector can be seen below.
+The median compensation of all salaried positions (meaning, excluding part-time work and internships) is **80,000 US dollars**. The breakdown by sector can be seen below.
 
 ```{r}
 #| echo: false
 #| warning: false
-fall_salary <- fall %>% 
+all_clean %>% 
   mutate(median_salary = (yearly_salary_min + yearly_salary_max)/2) %>% 
   filter(median_salary != 0,
          job_type != "part-time",
-         job_type != "internship")
-
-median_salary <- median(fall_salary$median_salary)
-mean_salary <- mean(fall_salary$median_salary, na.rm = TRUE)
-
-salary <- ggplot(data = fall_salary, aes(x = median_salary)) + 
-  geom_boxplot(color = bren_blue,
-           fill = alpha(bren_blue, 0.5)) +
-  labs(x = " ",
-       title = "All Positions") +
-  theme_classic() +
-  theme(axis.text.y = element_blank())
+         job_type != "internship") %>% 
   
-  #annotate("text", x = median(fall$median_salary, na.rm = TRUE),y = 1,
-          # label = median(fall$median_salary, na.rm = TRUE), vjust = 5.5)
-
-
-
-salary_sector <- ggplot(data = fall_salary, aes(x = median_salary,
-                        y = sector)) + 
-  geom_boxplot(color = bren_blue,
-           fill = alpha(bren_blue, 0.5)) +
-  labs(x = "Annual Compensation (US Dollars)",
-       y = " ") +
-  theme_classic() +
+  ggplot(aes(y = median_salary, x = reorder(sector, median_salary))) + 
+  geom_boxplot(color = bren_green,
+           fill = alpha(bren_green, 0.7)) +
+  labs(y = "Annual Compensation (US Dollars)",
+       x = " ") +
+  theme_minimal() +
+  theme(
+        panel.grid.minor = element_blank(),
+        panel.grid.major.x = element_blank(),
+        axis.title.y = element_text(margin = margin(r = 8))) +
   
-  geom_labelvline(xintercept = median_salary, 
-                  color = bren_green, label = "Median Salary: $74850",
-                  size = 3) 
+  # styling labels for spacing
+  
+  scale_x_discrete(labels = c("Non-profit/\nNGO", "Research/\nEducation", 
+                              "State\nGovernment", "Consulting", "Federal\nGovernment",
+                              "Local\nGovernment", "Corporate")) +
+  scale_y_continuous(labels = scales::label_number(scale = 1e-3, suffix = "k"))
 
-
-salary_sector
 ```
-
-It appears that positions in the local government and corporate have a median greater than that of the all-positions median. The corporate sector also has the highest outliers in the dataset, with salaries ranging all the way up to \$180,000. The non-profit/NGO sector offers the smallest compensation.
+The corporate sector has the highest outliers in the dataset, with salaries ranging all the way up to \$225,000. The non-profit/NGO sector offers the smallest compensation.
 
 It should be mentioned that not all positions in the dataset are salaried position: if they contained hourly or monthly compensation information, annual compensation was approximated (assuming a 37.5-hour work week). Part-time and internship positions are excluded from these figures.
 
@@ -520,29 +515,40 @@ GIS, R, and Python are the primary data analysis skills that employers are looki
 ```{r}
 #| echo: false
 # Create columns that contain TRUE/FALSE values for hard skills mentioned
-fall <- fall %>% 
-  mutate(R_req = stringr::str_detect(fall$hard_skills, "R"), 
-         Python_req = stringr::str_detect(fall$hard_skills, "Python"),
-         GIS_req = stringr::str_detect(fall$hard_skills, "GIS"),
-         Excel_req = stringr::str_detect(fall$hard_skills, "Excel"),
-         SQL_req = stringr::str_detect(fall$hard_skills, "SQL"),
-         Power_req = stringr::str_detect(fall$hard_skills, "Power BI"))
+all_clean <- all_clean %>% 
+  mutate(R_req = stringr::str_detect(all_clean$hard_skills, "R"), 
+         Python_req = stringr::str_detect(all_clean$hard_skills, "Python"),
+         GIS_req = stringr::str_detect(all_clean$hard_skills, "GIS"),
+         Excel_req = stringr::str_detect(all_clean$hard_skills, "Excel"),
+         SQL_req = stringr::str_detect(all_clean$hard_skills, "SQL"),
+         Power_req = stringr::str_detect(all_clean$hard_skills, "Power BI"))
 
 # Create data frame with the number of positions that mentioned each skill
 skills <- c("R", "Python", "GIS", "Excel", "SQL", "Power BI")
-skills_sum <- c(sum(fall$R_req, na.rm = TRUE), sum(fall$Python_req, na.rm = TRUE), sum(fall$GIS_req, na.rm = TRUE), sum(fall$Excel_req, na.rm = TRUE), sum(fall$SQL_req, na.rm = TRUE), sum(fall$Power_req, na.rm = TRUE))
+skills_sum <- c(sum(all_clean$R_req, na.rm = TRUE), 
+                sum(all_clean$Python_req, na.rm = TRUE), 
+                sum(all_clean$GIS_req, na.rm = TRUE), 
+                sum(all_clean$Excel_req, na.rm = TRUE), 
+                sum(all_clean$SQL_req, na.rm = TRUE), 
+                sum(all_clean$Power_req, na.rm = TRUE))
 
 skills_count <- data.frame(skills, skills_sum)
 
 # Plot data frame
 ggplot(skills_count, aes(x = reorder(skills, skills_sum), y = skills_sum)) +
   geom_col(color = bren_blue,
-           fill = alpha(bren_blue, 0.5)) +
-  geom_text(aes(label = skills_sum), hjust = -0.5) +
+           fill = alpha(bren_blue, 0.8)) +
+  geom_text(aes(label = skills_sum), hjust = 1.5,
+            color = ivory) +
   coord_flip() +
-  labs(y = "Number of Positions", 
-       x = "Hard Skill Mentioned") +
-  theme_classic()
+  labs(y = " ", 
+       x = " ") +
+  theme_classic() +
+  theme(
+   axis.line.x = element_blank(),
+   axis.text.x = element_blank(),
+   axis.ticks.x = element_blank()
+  )
 ```
 
 It was common for positions to not list a specific coding language, but instead use terms such as "data analysis" or "spatial analysis" to convey their qualifications.
@@ -566,8 +572,157 @@ It was common for positions to not list a specific coding language, but instead 
 **Date Posted (to BrenConnect):** December 6, 2025
 :::
 
+## Comparison
+
+There were some fluctuations in the proportion of job listings that represent each sector, between fall and winter. For example, the percent of corporate listings jumped from 8% in the fall to 15% in the winter. Other trends include an increase in roles at Non-Profits and NGOs, a decrease in the Research/Education sector, and the appearance of Federal Government positions in the winter. 
+
+```{r}
+#| echo: false
+#| message: false
+all_clean %>% 
+  group_by(season, sector) %>% 
+  summarize(count = n(),
+            percent = count/nrow(all_clean)) %>% 
+ggplot(aes(x = reorder(sector, percent), y = percent, 
+           fill = season, 
+           color = season)) + 
+  geom_col(position = "dodge") +
+  geom_text(aes(label = paste0(round(percent * 100), "%"), 
+            vjust = ifelse(season == "fall", 1.5, -0.8)),
+            hjust = 1.5,
+            color = ivory) +
+
+  scale_fill_manual(values = c(alpha(bren_blue, 0.8), alpha(bren_green, 0.8))) +
+  scale_color_manual(values = c(bren_blue, bren_green), guide = "none") +
+  labs(y = " ") +
+  report_theme() +
+  coord_flip() +
+   theme(
+   axis.line.x = element_blank(),
+   axis.text.x = element_blank(),
+   axis.ticks.x = element_blank()
+  )
+```
+
+In terms of position type, the number of open internships and fellowships increased in the winter. This may be because hiring employers anticipate an influx of interns in the summer and therefore start their hiring process in the winter. The dispersion across different environmental fields stayed relatively the same between the two seasons.
+
 ## Conclusion
 
-104 environmental data science positions were retrieved from online job boards between October 28, 2025 through January 3, 2026. They covered roles in all sectors and a wide range of environmental focuses, and varied in salary, modality, commitment length, and position type. The most popular data analysis qualifications were proficiency in GIS and R.
+234 environmental data science positions were retrieved from online job boards between October 28, 2025 through March 27, 2026. They covered roles in all sectors and a wide range of environmental focuses, and varied in salary, modality, commitment length, and position type. The most popular data analysis qualifications were proficiency in GIS and R.
 
+
+
+```{r} 
+#| echo: false 
+#| message: false
+#| output: false
+commitment <- all_clean %>% 
+  group_by(season, term) %>% 
+  summarize(count = n()) %>% 
+  filter(term != "part-time") %>% 
+ggplot(aes(x = reorder(term, -count), y = count)) + 
+  geom_bar(stat = "identity",
+           aes(fill = season, 
+           color = season),
+           position = "dodge") +
+  geom_text(aes(label = count,
+                hjust = ifelse(season == "fall", 3.9, -3)),
+            vjust = -.7) +
+  labs(title = "Commitment Length",
+       y = " ") +
+  theme_classic() +
+  scale_x_discrete(labels = c("Permanent", "Limited Term")) +
+  theme(axis.title.x = element_blank()) +
+  ylim(0, 200) +
+  scale_fill_manual(values = c(alpha(bren_blue, 0.8), alpha(bren_green, 0.8))) +
+  scale_color_manual(values = c(bren_blue, bren_green), guide = "none") +
+   theme(
+   axis.line.y = element_blank(),
+   axis.text.y = element_blank(),
+   axis.ticks.y = element_blank()
+  )
+
+type <- all_clean %>% 
+  mutate(job_type = case_when(
+    job_type == "short-term project" ~ "internship",
+    TRUE ~ job_type)) %>% 
+  group_by(season, job_type) %>% 
+  summarize(n = n()) %>% 
+ggplot(aes(x = reorder(job_type, -n), y = n)) + 
+  geom_bar(stat = "identity",
+            aes(fill = season, 
+           color = season),
+           position = "dodge") +
+  geom_text(aes(label = n,
+                hjust = ifelse(season == "fall", 2.1, -1.1)),
+            vjust = -.7) +
+  scale_color_identity(guide = "none") +
+  labs(title = "Position Type",
+       y = " ") +
+  theme_classic() +
+  scale_x_discrete(labels = c("Full-time", "Internship", "Fellowship", "Part-time")) +
+  theme(axis.title.x = element_blank()) +
+  ylim(0, 200) +
+  scale_fill_manual(values = c(alpha(bren_blue, 0.8), alpha(bren_green, 0.8))) +
+  scale_color_manual(values = c(bren_blue, bren_green), guide = "none") +
+   theme(
+   axis.line.y = element_blank(),
+   axis.text.y = element_blank(),
+   axis.ticks.y = element_blank()
+  )
+
+# * note that short term project was lumped into internship!
+
+modality <- all_clean %>% 
+  group_by(season, modality) %>% 
+  summarize(n = n()) %>% 
+ggplot(aes(x = reorder(modality, -n), y = n)) + 
+  geom_bar(stat = "identity",
+            aes(fill = season, 
+           color = season),
+           position = "dodge") +
+  geom_text(aes(label = n,
+                hjust = ifelse(season == "fall", 1.9, -1)),
+            vjust = -.7) +
+
+  labs(title = "Modality", y = " ") +
+  theme_classic() +
+   scale_x_discrete(labels = c("On-site", "Hybrid", "Remote", "Remote Option", "Hybrid Option")) +
+  theme(axis.title.x = element_blank()) +
+  ylim(0, 150) +
+  scale_fill_manual(values = c(alpha(bren_blue, 0.8), alpha(bren_green, 0.8))) +
+  scale_color_manual(values = c(bren_blue, bren_green), guide = "none") +
+   theme(
+   axis.line.y = element_blank(),
+   axis.text.y = element_blank(),
+   axis.ticks.y = element_blank()
+  )
+
+commitment / type / modality +
+  plot_layout(axes = "collect", guides = "collect")
+```
+```{r}
+#| echo: false
+#| message: false
+#| output: false
+all_clean %>% 
+  
+   mutate(environmental_field = case_when(
+    is.na(environmental_field) ~ "other data analysis",
+    TRUE ~ environmental_field)) %>% 
+  
+  group_by(season, environmental_field) %>% 
+  summarize(count = n()) %>% 
+  
+ggplot(aes(x = count, y = reorder(environmental_field, count))) + 
+  geom_bar(stat = "identity",
+           aes(fill = season, 
+           color = season),
+           position = "dodge") +
+  #geom_text(aes(label = count, color = season), hjust = -.5) +
+  labs(x = "Number of Positions") +
+  report_theme() +
+   scale_fill_manual(values = c(alpha(bren_blue, 0.8), alpha(bren_green, 0.8))) +
+  scale_color_manual(values = c(bren_blue, bren_green), guide = "none") 
+```
 
