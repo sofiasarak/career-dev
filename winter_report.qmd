@@ -647,11 +647,9 @@ ggplot(aes(x = reorder(term, -percent), y = percent)) +
   )
 ```
 
-Other variables were not evaluated as they are more dependent on the roles themselves than on seasonality.
-
 ## Conclusion
 
-234 environmental data science positions were retrieved from online job boards between October 28, 2025 through March 27, 2026. They covered roles in all sectors and a wide range of environmental focuses, and varied in salary, modality, commitment length, and position type. The corporate and consulting sectors were the highest paying, and the most popular data analysis qualifications were proficiency in GIS and R.
+234 environmental data science positions were retrieved from online job boards between October 28, 2025 through March 27, 2026. They covered roles in all sectors and a wide range of environmental focuses, and varied in salary, modality, commitment length, and position type. The corporate and local government sectors were the highest paying, and the most popular data analysis qualifications were proficiency in GIS and R.
 
 When comparing fall to winter, it becomes apparent that the number of limited term position listings, such as internships, increase in the winter months. Additionally, roles in federal government were only found in the winter (perhaps related to it being the start of the calendar year).
 
