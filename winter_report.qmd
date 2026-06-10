@@ -12,7 +12,7 @@ filters:
 - custom-callout
 ---
 
-The following report contains statistics and visualizations summarizing the job openings being posted to online services such as [Indeed](https://www.indeed.com/jobs?q=environmental+data+science&l=&from=searchOnHP&vjk=b9ae5b9d8d4a16b4), [Conservation Job Board](https://www.conservationjobboard.com/), [CalCareers](https://calcareers.ca.gov/CalHRPublic/Search/JobSearchResults.aspx#kw=environmental%20data), and others. Keywords such "environmental data science", "environmental analyst", and "climate analyst" (just to name a few, though a wide range were used) were searched for, and roles pertaining to environmental data analysis, planning, or communication were pulled and re-posted on the [BrenConnect website](https://brenconnect.bren.ucsb.edu/s/group/0F9Kg0000004CHNKA2/meds-2026-jobinternship-opportunities). 
+The following report contains statistics and visualizations summarizing the job openings being posted to online services such as [Indeed](https://www.indeed.com/jobs?q=environmental+data+science&l=&from=searchOnHP&vjk=b9ae5b9d8d4a16b4), [Conservation Job Board](https://www.conservationjobboard.com/), [CalCareers](https://calcareers.ca.gov/CalHRPublic/Search/JobSearchResults.aspx#kw=environmental%20data), and others. Keywords such "environmental data science", "environmental analyst", and "climate analyst" (just to name a few, though a wide range were used) were searched for, and roles pertaining to environmental data analysis, planning, or communication were pulled and re-posted on the [BrenConnect website](https://brenconnect.bren.ucsb.edu/s/group/0F9Kg0000004CHNKA2/meds-2026-jobinternship-opportunities).
 
 This report summarizes the listings reposted and data collected between October 2025 and March 2026, and offers a brief comparison between the fall (October through early January) and winter (January through March) quarters. **In total, there are 234 job listings summarized in this report, with 104 pertaining to the fall and the other 130 to the winter.** Example job listings from the winter quarter are also included throughout.
 
@@ -429,14 +429,12 @@ commitment / type / modality +
   plot_layout(axes = "collect")
 ```
 
-
 ::: {.green collapse="true" icon="false"}
 ## Limited Term Position: Research Data Analyst \@ CalRecycle
 
 **Location:** Sacramento County, CA (hybrid)
 
 **Description:** California’s Department of Resources Recycling and Recovery (CalRecycle) brings together the state’s recycling and waste management programs to move the state towards a circular economy that reduces waste and reuses all materials. The Convenience Zone Unit is seeking a research data analyst to use GIS Map Query and Viewer to independently perform a full range of work. In addition, the incumbent will analyze a wide range of program related issues to advise the unit supervisor in the development of program alternatives, policies and procedures.
-
 
 **Desired Qualifications:**
 
@@ -501,16 +499,20 @@ all_clean <- all_clean %>%
          GIS_req = stringr::str_detect(all_clean$hard_skills, "GIS"),
          Excel_req = stringr::str_detect(all_clean$hard_skills, "Excel"),
          SQL_req = stringr::str_detect(all_clean$hard_skills, "SQL"),
-         Power_req = stringr::str_detect(all_clean$hard_skills, "Power BI"))
+         Power_req = stringr::str_detect(all_clean$hard_skills, "Power BI"),
+         spatial_req = stringr::str_detect(all_clean$hard_skills, "Spatial analysis"),
+         remote_req = stringr::str_detect((all_clean$hard_skills, "remote")))
 
 # Create data frame with the number of positions that mentioned each skill
-skills <- c("R", "Python", "GIS", "Excel", "SQL", "Power BI")
+skills <- c("R", "Python", "GIS", "Excel", "SQL", "Power BI", "Spatial analysis")
 skills_sum <- c(sum(all_clean$R_req, na.rm = TRUE), 
                 sum(all_clean$Python_req, na.rm = TRUE), 
                 sum(all_clean$GIS_req, na.rm = TRUE), 
                 sum(all_clean$Excel_req, na.rm = TRUE), 
                 sum(all_clean$SQL_req, na.rm = TRUE), 
-                sum(all_clean$Power_req, na.rm = TRUE))
+                sum(all_clean$Power_req, na.rm = TRUE),
+                sum(all_clean$spatial_req, na.rm = TRUE),
+                sum(all_clean$remote_req, na.rm = TRUE))
 
 skills_count <- data.frame(skills, skills_sum)
 
@@ -538,7 +540,7 @@ It was common for positions to not list a specific coding language, but instead 
 
 **Location:** Summerland Key, Florida
 
-**Description:** Located in the center of Lower Keys and only 24 miles from Key West, Mote’s International Center for Coral Reef Research & Restoration is a fully equipped marine science facility dedicated to marine research and education in the Florida Keys. They are currently seeking a restoration data management & analytics coordinator to actively and closely coordinate with the Program Manager in the management, organization, archival, reporting, and analysis of all Coral Reef Restoration Research data. 
+**Description:** Located in the center of Lower Keys and only 24 miles from Key West, Mote’s International Center for Coral Reef Research & Restoration is a fully equipped marine science facility dedicated to marine research and education in the Florida Keys. They are currently seeking a restoration data management & analytics coordinator to actively and closely coordinate with the Program Manager in the management, organization, archival, reporting, and analysis of all Coral Reef Restoration Research data.
 
 **Desired Qualifications:**
 
